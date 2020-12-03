@@ -160,7 +160,7 @@ Cannot connect console device over network
 
 From the host machine, run `ifconfig` and confirm that the IP address has been entered
 correctly from the console device. Test IP address and port (e.g. http://192.168.10.1:8088)
-fro the host machine first and confirm that the console  
+fro the host machine first and confirm that the console 
 
 
 
