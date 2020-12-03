@@ -1,61 +1,304 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Karaoke
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+...
 
-## About Laravel
+## Prerequisities
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Virtualbox - apt install virtualbox
+Vagrant ^2.2.6
+https://www.vagrantup.com/downloads.html, not apt-get as version too low for Homestead
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Apache
+PHP
+https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mysql-php-lamp-stack-ubuntu-18-04
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Composer
+https://getcomposer.org/download/
 
-## Learning Laravel
+PHP extensions
+- php-mbstring
+- php-dom
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Karaoke videos are in /public/media/{lang}/{artist}/{song}
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Homestead wil be required (e.g. ~/Homestead) to manage the VMs.
 
-## Laravel Sponsors
+net-tools (ifconfig) for debugging network issues.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+If doing reverse proxy, then:
+- a2enmod proxy
+- a2enmod proxy_http
 
-### Premium Partners
+## Installation
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[OP.GG](https://op.gg)**
+```
+git clone ...karaoke-laravel5
+cd karaoke-laravel5/
+composer install
+```
 
-## Contributing
+Homestead is used to run all laravel projects on a single VM rather than multiple VMs. https://scotch.io/tutorials/getting-started-with-laravel-homestead
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```
+$ cd karaoke-laravel5/
+$ php artisan key:generate
+$ cp .env.example .env
+```
 
-## Code of Conduct
+Vagrant is used to start the VM which is where we'll run the app from:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+$ cd ~/Homestead
+$ vagrant up
+$ vagrant ssh
+```
 
-## Security Vulnerabilities
+Run the migrations to generate tables:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+$ php artisan migrate
+```
 
-## License
+If seeders exist, run the them:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+$ php artisan db:seed
+```
+
+Register a new user at http://192.168.10.10/register. The player should be running
+from http://192.168.10.10/player. Next we'll setup the other device (e.g. tablet)
+for the /console.
+
+==
+
+If generating data for first time, run the following to fetch song data:
+
+```
+$ php artisan karaoke:songs:update
+```
+
+As the update takes about 10 minutes, it is worth generating seeders:
+
+```
+$ php artisan iseed artists_meta,artists,languages,songs_meta,songs,tags,artist_tag,song_tag
+```
+
+Once you have written your seeder, you may need to regenerate Composer's autoloader using
+the dump-autoload command (unless iseed does this already?):
+
+```
+$ composer dump-autoload
+```
+
+==
+
+Additional steps
+
+Allow laptop lid to close when connected to another screen (e.g. TV). Or, set the other screen to
+the primary screen and use that one only.
+
+Disable sleep mode when inactive otherwise you'll be constantly putting in your password.
+
+## Vagrant/ port forwarding setup
+
+EASY WAY: Homestead will map to port 8000, test from host e.g. 192.168.10.1:8000/console. Might to allow incoming traffic on that port e.g. sudo ufw allow 8000.
+
+OR, reverse proxy...
+
+To allow another device such as a tablet to access /console, below is how to configure
+Apache on the host machine to direct incoming traffic to the VM's network IP address (as
+defined in Homestead.yaml):
+
+/etc/apache2/sites-available/karaoke.conf
+
+```
+<VirtualHost *:8088>
+    ProxyPreserveHost On
+    ServerName mydomain.com
+    ServerAlias www.mydomain.com
+    ProxyPass "/" "192.168.10.10/"
+    ProxyPassReverse "/" "192.168.10.10/"
+</VirtualHost>
+```
+
+OR this one?
+
+```
+<VirtualHost *:8089>
+    ProxyPreserveHost On
+    ProxyPass        "/" "192.168.10.10/"
+    ProxyPassReverse "/" "192.168.10.10/"
+    ServerName hostname.example.com
+</VirtualHost>
+```
+
+Now other devices on the network can access the console at http://<Host IP address>:8088/console
+
+## Connect with device on embedded console
+
+This is easy as it's the same app. Determine the host (player) IP with `ifconfig`.
+Use that IP from the browser of the tablet with the 8000/8088 port.
+You may need to provide firewall access e.g. `ufw allow 8000`
+
+## Allowing third-party access SPA console (e.g. React console app)
+
+Create a user at /register for the third-party.
+
+Create an API client linked to that user:
+
+```
+$ php artisan passport:client
+```
+
+## Transalations
+
+langman
+
+## Troubleshooting
+
+Cannot connect console device over network
+
+From the host machine, run `ifconfig` and confirm that the IP address has been entered
+correctly from the console device. Test IP address and port (e.g. http://192.168.10.1:8088)
+fro the host machine first and confirm that the console  
+
+
+
+=== Old ===
+
+## KVM/ iptables setup (incomplete)
+
+Problem: Sharing media directory?? Probably best to create a Samba share if possible
+
+This method is where the app is running on a guest VM within KVM. Iptables is configured
+to forward any incoming traffic (e.g. tablet) on a given port to the guest IP address.
+
+First, install KVM - https://www.ostechnix.com/setup-headless-virtualization-server-using-kvm-ubuntu/
+
+Share media directory between host and guest VM - http://rabexc.org/posts/p9-setup-in-libvirt
+
+```
+ssh ...
+cd /var/www
+mkdir karaoke-l5
+chown user:user karaoke-l5
+git clone ... karaoke-l5
+cd karaoke-l5
+composer install
+```
+
+The deployed site should be accessible from the host machine as this will be the video player.
+
+Below is the virtualhost file for the VM:
+
+```
+NameVirtualHost *:8080
+Listen 8080
+
+<VirtualHost *:8080>
+    ServerAdmin admin@example.com
+    ServerName karaoke-l5.clara
+    ServerAlias www.karaoke-l5.clara
+    DocumentRoot /var/www/karaoke-l5/public
+
+    <Directory /var/www/karaoke-l5/public/>
+            Options Indexes FollowSymLinks MultiViews
+            AllowOverride All
+            Order allow,deny
+            allow from all
+            Require all granted
+    </Directory>
+
+    LogLevel debug
+    ErrorLog ${APACHE_LOG_DIR}/karaoke-l5-error.log
+    CustomLog ${APACHE_LOG_DIR}/karaoke-l5-access.log combined
+</VirtualHost>
+```
+
+```
+$ a2ensite karaoke-l5.conf
+```
+
+Ensure apache mod rewrites are enabled:
+
+```
+$ a2enmod rewrite
+```
+
+Set database:
+
+```
+CREATE DATABASE karaoke_l5;
+GRANT ALL PRIVILEGES ON *.* TO 'karaoke_l5_user'@'localhost' IDENTIFIED BY 'p455word';
+```
+
+Create .env file with the above credentials.
+
+```
+$ cp .env.example .env
+$ vim .env
+```
+
+Run migrations with seeds:
+
+```
+$ php artisan migrate --seed
+```
+
+Generate key:
+
+```
+$ php artisan key:generate
+```
+
+Set permissions on folders:
+
+```
+$ sudo chgrp www-data storage/logs/
+$ sudo chgrp www-data storage/framework/
+$ sudo chgrp -R www-data storage bootstrap/cache
+$ sudo chmod -R ug+rwx storage bootstrap/cache
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO
+
+- console playlist auto update when songs are deleted from player
+- add in messages, errors in layout
+- testing
+- flash messages -
+- testing: https://laravel.com/docs/5.6/testing
+- https://github.com/barryvdh/laravel-debugbar
+- migrations: what's wrong with foreign keys?
+
+- split up assets: console.css, player.css, etc
+- manage users - https://github.com/jeremykenedy/laravel-users
+- include $(document).foundation()
+- https://github.com/barryvdh/laravel-debugbar
+- migrations: what's wrong with foreign keys?
+- use form helpers, add blade syntax
+- roles?
+- when nothing playing, play cheesy adverts
+
+Laravel passports
+- add list clients, edit, delete to cli tool
+
+
+bug: if the same song is on the playlist many times, does deleting one delete them all? shouldn't do
+
+
+https://mattstauffer.com/blog/advanced-input-output-with-artisan-commands-tables-and-progress-bars-in-laravel-5.1/
+
+create a shared folder in virtualbox - https://www.youtube.com/watch?v=DVoX-Hq_Qk4
