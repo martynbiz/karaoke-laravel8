@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'main_menu' => 'Main menu',
+    'songs_button' => 'Songs',
+    'artists_button' => 'Artists',
+    'genre_button' => 'Genre',
+    'languages_button' => 'Languages',
+    'most_requested' => 'Most requested',
+    'most_recent' => 'Newest songs',
+    'playlist' => 'Playlist',
+    'login' => 'Login',
+    'logout' => 'Logout',
+    'home' => 'Home',
+    'songs' => 'Songs',
+    'search' => 'Search',
+    'save' => 'Save',
+    'artists' => 'Artists',
+    'languages' => 'Languages',
+    'are_you_sure_you_want_to_remove__song__' => 'Are you sure you want to remove {song}?',
+    'remove_song' => 'Remove song',
+    'song' => 'Song',
+    'artist' => 'Artist',
+    'skip' => 'Skip',
+    'remove' => 'Remove',
+    'add_to_queue' => 'Add to queue',
+    'tags' => 'Tags',
+];
