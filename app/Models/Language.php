@@ -16,6 +16,6 @@ class Language extends Model
 
     public function songs()
     {
-        return $this->hasMany('App\\Song'); //, 'user_id');
+        return $this->hasMany('App\\Models\\Song'); //, 'user_id');
     }
 }

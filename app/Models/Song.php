@@ -23,26 +23,26 @@ class Song extends Model
 
     public function artist()
     {
-        return $this->belongsTo('App\\Artist'); //, 'user_id');
+        return $this->belongsTo('App\\Models\\Artist'); //, 'user_id');
     }
 
     public function language()
     {
-        return $this->belongsTo('App\\Language'); //, 'user_id');
+        return $this->belongsTo('App\\Models\\Language'); //, 'user_id');
     }
 
     public function meta()
     {
-        return $this->hasMany('App\\SongsMeta'); //, 'user_id');
+        return $this->hasMany('App\\Models\\SongsMeta'); //, 'user_id');
     }
 
     public function tags()
     {
-        return $this->belongsToMany('App\\Tag')->withTimestamps(); //, 'user_id');
+        return $this->belongsToMany('App\\Models\\Tag')->withTimestamps(); //, 'user_id');
     }
 
     public function playlists()
     {
-        return $this->belongsToMany('App\\Playlist')->withTimestamps();;
+        return $this->belongsToMany('App\\Models\\Playlist')->withTimestamps();;
     }
 }

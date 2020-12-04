@@ -16,6 +16,6 @@ class Tag extends Model
 
     public function songs()
     {
-        return $this->belongsToMany('App\\Song')->withTimestamps(); //, 'user_id');
+        return $this->belongsToMany('App\\Models\\Song')->withTimestamps(); //, 'user_id');
     }
 }

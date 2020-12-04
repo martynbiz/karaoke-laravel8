@@ -20,21 +20,21 @@ class Artist extends Model
 
     public function songs()
     {
-        return $this->hasMany('App\\Song');
+        return $this->hasMany('App\\Models\\Song');
     }
 
     public function albums()
     {
-        return $this->hasMany('App\\Album');
+        return $this->hasMany('App\\Models\\Album');
     }
 
     public function meta()
     {
-        return $this->hasMany('App\\ArtistsMeta');
+        return $this->hasMany('App\\Models\\ArtistsMeta');
     }
 
     public function tags()
     {
-        return $this->belongsToMany('App\\Tag')->withTimestamps();
+        return $this->belongsToMany('App\\Models\\Tag')->withTimestamps();
     }
 }

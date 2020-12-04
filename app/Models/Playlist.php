@@ -16,11 +16,11 @@ class Playlist extends Model
 
     public function songs()
     {
-        return $this->belongsToMany('App\\Song')->withTimestamps();
+        return $this->belongsToMany('App\\Models\\Song')->withTimestamps();
     }
 
     public function user()
     {
-        return $this->belongsTo('App\\User'); //, 'user_id');
+        return $this->belongsTo('App\\Models\\User'); //, 'user_id');
     }
 }

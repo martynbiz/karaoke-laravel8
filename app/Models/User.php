@@ -30,7 +30,7 @@ class User extends Authenticatable
 
     public function playlists()
     {
-        return $this->hasMany('App\\Playlist'); //, 'user_id');
+        return $this->hasMany('App\\Models\\Playlist'); //, 'user_id');
     }
 }
 
