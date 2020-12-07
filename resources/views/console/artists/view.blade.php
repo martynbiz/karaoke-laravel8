@@ -19,7 +19,7 @@
             <p>{!! $artist->getMeta('summary') !!}</p>
             <ul class="song-tag-list">
                 <?php foreach ($artist->tags()->where('is_valid', 1)->get() as $tag): ?>
-                    <li><a href="{{ route('console_tags_view', ['tag_id' => $tag->id]) }}" class="button">{{ $tag->name }}</a></li>
+                    <li><a href="{{ route('console_tags_view', ['id' => $tag->id]) }}" class="button">{{ $tag->name }}</a></li>
                 <?php endforeach ?>
             </ul>
             <hr>

@@ -23,7 +23,7 @@ class SongFactory extends Factory
      */
     public function definition()
     {
-        $language = factory(Language::class)->make();
+        $language = Language::factory()->make();
 
         return [
             'id' => 1, // e.g. 79907610

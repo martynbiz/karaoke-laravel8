@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use App\Traits\GetMetaByName;
 
 class Song extends Model
 {
-    use GetMetaByName;
+    use GetMetaByName, HasFactory;
 
     /**
     * @var array

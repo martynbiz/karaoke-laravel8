@@ -36,7 +36,7 @@ Route::middleware(['auth'])->group(function () {
 		// artists
 		Route::prefix('artists')->group(function () {
 		    Route::get('/', [Console\ArtistsController::class, 'index'])->name('console_artists');
-			// Route::get('/{id}', [Console\ArtistsController::class, 'view'])->name('console_artists_view');
+			Route::get('/{id}', [Console\ArtistsController::class, 'view'])->name('console_artists_view');
 		});
 
 		// languages

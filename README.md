@@ -2,6 +2,23 @@
 
 ...
 
+sly stone 
+big theif 
+cohen 
+bjork 
+dionne warwick
+cilla black 
+pewdiepie
+
+
+TODO 
+- admin section: update songs meta data ui, display network info e.g. ip address, 
+
+Raspberry pi 
+- install nginx, php, app on raspberry pi
+- configure pi 
+- connect to tv, start up pi, instructions to connect console. 
+
 ## Prerequisities
 
 Virtualbox - apt install virtualbox
@@ -35,6 +52,25 @@ If doing reverse proxy, then:
 git clone ...karaoke-laravel5
 cd karaoke-laravel5/
 composer install
+```
+
+OR with Laradock
+
+@See https://sam-ngu.medium.com/laradock-quick-start-laravel-docker-tutorial-d1bbb7796a7
+
+```
+docker run --rm -v ${pwd}:/app composer install
+```
+
+```
+$ cd laradock 
+$ docker-compose up -d nginx mysql
+```
+
+==
+
+```
+https://laradock.io/documentation/#run-artisan-commands
 ```
 
 Homestead is used to run all laravel projects on a single VM rather than multiple VMs. https://scotch.io/tutorials/getting-started-with-laravel-homestead

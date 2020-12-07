@@ -35,7 +35,7 @@
             <div class="grid-x grid-padding-x margin-bottom">
                 <?php foreach ($artists as $artist): ?>
                     <div class="small-4 cell artists-list__item">
-                        <a href="{{ route('console_artists_view', ['artist_id' => $artist->id]) }}" class="button expanded large">{{ $artist->name }}</a>
+                        <a href="{{ route('console_artists_view', ['id' => $artist->id]) }}" class="button expanded large">{{ $artist->name }}</a>
                     </div>
                 <?php endforeach ?>
             </div>

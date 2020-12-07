@@ -18,7 +18,7 @@
     <div class="grid-x grid-padding-x margin-y tags-list">
         <?php foreach ($tags as $tag): ?>
             <div class="small-4 cell">
-                <a href="{{ route('console_tags_view', ['tag_id' => $tag->id]) }}" class="button expanded large tags-list__item">{{ $tag->name }}</a>
+                <a href="{{ route('console_tags_view', ['id' => $tag->id]) }}" class="button expanded large tags-list__item">{{ $tag->name }}</a>
             </div>
         <?php endforeach ?>
     </div>

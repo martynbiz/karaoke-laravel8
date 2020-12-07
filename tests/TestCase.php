@@ -64,15 +64,15 @@ abstract class TestCase extends BaseTestCase
     protected $tagInvalid = null;
 
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
-        $this->user = factory(User::class)->make();
-        $this->artist = factory(Artist::class)->make();
-        $this->language = factory(Language::class)->make();
-        $this->song = factory(Song::class)->make();
-        $this->tag = factory(Tag::class)->make();
+        $this->user = User::factory()->make();
+        $this->artist = Artist::factory()->make();
+        $this->language = Language::factory()->make();
+        $this->song = Song::factory()->make();
+        $this->tag = Tag::factory()->make();
     }
 
     /**
