@@ -73,6 +73,12 @@ Route::middleware(['auth'])->group(function () {
 			Route::put('/', [Admin\TagsController::class, 'update'])->name('admin_tags_update');
 		});
 
+		// songs
+		Route::prefix('songs')->group(function () {
+		    Route::get('/', [Admin\SongsController::class, 'edit'])->name('admin_songs_edit');
+			Route::put('/', [Admin\SongsController::class, 'update'])->name('admin_songs_update');
+		});
+
 	});
 });
 

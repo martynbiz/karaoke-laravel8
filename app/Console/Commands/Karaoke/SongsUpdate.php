@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Karaoke;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
 
 use App\Models\Song;
 use App\Models\Artist;
@@ -53,12 +54,16 @@ class SongsUpdate extends Command
      */
     protected $tagModel;
 
-    /**
-     * Settings
-     *
-     * @var array
-     */
-    protected $config = [];
+    // /**
+    //  * Settings
+    //  *
+    //  * @var array
+    //  */
+    // protected $config = [];
+
+    protected $pathPattern;
+
+    protected $apiBaseUrl;
 
     /**
      * Create a new command instance.
@@ -72,11 +77,8 @@ class SongsUpdate extends Command
         $this->languageModel = $languageModel;
         $this->tagModel = $tagModel;
 
-        $this->config = [
-            'media_dir' => '/home/vagrant/karaoke/public/media',
-            'path_pattern' => '/^.*\/(.*)\/(.*)\/(.*)\..*?$/',
-            'api_key' => '73a4c2716ad6250f92d0210140e47a0c',
-        ];
+        $this->pathPattern = '/^.*\/(.*)\/(.*)\/(.*)\..*?$/';
+        $this->apiBaseUrl = 'http://ws.audioscrobbler.com/2.0/';
 
         parent::__construct();
     }
@@ -88,16 +90,15 @@ class SongsUpdate extends Command
      */
     public function handle()
     {
-        // TODO move this to .env  MEDIA_DIR="/var/www/karaoke2/public/media"
-        $config = $this->config;
+        // // TODO move this to .env  MEDIA_DIR="/var/www/karaoke2/public/media"
+        $mediaDir = base_path(env('MEDIA_DIR'));
 
         // Get paths as array
-        $paths = $this->scanDir( $config['media_dir'] );
+        $paths = $this->scanDir( $mediaDir );
         // $paths = array_slice($paths, 0, 1);// TODO testing
         foreach ($paths as $i => $path) {
             // e.g. /var/www/karaoke/../Lang/Artist/Song.mp4 -> /Lang/Artist/Song.mp4
-            // $paths[$i] = $this->prepareSongPath($paths[$i]);
-            $paths[$i] = str_replace($config['media_dir'], '', $path);
+            $paths[$i] = str_replace($mediaDir, '', $path);
         }
 
         // remove songs that are not in the latest scan
@@ -117,15 +118,14 @@ class SongsUpdate extends Command
             }
         }
 
-        $mediaDir = $config['media_dir'];
-
+        // TODO 'AddingSongs:start' event
         $this->line('Adding song paths to database:');
         $this->output->progressStart( count($paths) );
 
         foreach ($paths as $i => $path) {
 
             // extract the artist/name from path
-            preg_match($config['path_pattern'], $path, $matches);
+            preg_match($this->$pathPattern, $path, $matches);
 
             if ($matches) {
                 list($match, $languageName, $artistName, $songName) = $matches;
@@ -181,30 +181,18 @@ class SongsUpdate extends Command
         $this->fetchMetaData($logs);
     }
 
-    // /**
-    //  * Will populate the db with file name data
-    //  */
-    // public function prepareSongPath($path)
-    // {
-    //     $container = $this->getContainer();
-    //     $mediaDir = $container->get('settings')['song_files']['parent_dir'];
-    //     return str_replace($mediaDir, '', $path);
-    // }
-
     /**
      * @param $song {Song}
      * @param $sleepBetweenCalls {integer} How many seconds to wait between api calls
      */
     protected function fetchMetaData(&$logs) {
 
-        $config = $config = $this->config;
+        // // get song information from api
+        // $client = new \GuzzleHttp\Client([
+        //     'base_uri' => 'http://ws.audioscrobbler.com/2.0/'
+        // ]);
 
-        // get song information from api
-        $client = new \GuzzleHttp\Client([
-            'base_uri' => 'http://ws.audioscrobbler.com/2.0/'
-        ]);
-
-        $apiKey = $config['api_key']; //'73a4c2716ad6250f92d0210140e47a0c';
+        $apiKey = env('LASTFM_API_KEY');
         $songs = $this->songModel
             ->where('has_meta', 0)
             ->get();
@@ -217,8 +205,11 @@ class SongsUpdate extends Command
 
             $artist = $song->artist;
             $url = '?api_key='.$apiKey.'&format=json&method=track.getInfo&artist='.$song->artist->name.'&track='.$song->name;
-            $res = $client->request('GET', $url);
-            $decoded = json_decode($res->getBody());
+            
+            // $response = $client->request('GET', $url);
+            $response = Http::get($this->apiBaseUrl . $url);
+            
+            $decoded = json_decode($response->getBody());
 
             // TODO song_meta.summary
             if (isset($decoded->track->wiki) and isset($decoded->track->wiki->summary)) {
@@ -275,8 +266,11 @@ class SongsUpdate extends Command
 
         foreach ($artists as $i => $artist) {
             $url = '?api_key='.$apiKey.'&format=json&method=artist.getInfo&artist='.$artist->name;
-            $res = $client->request('GET', $url);
-            $decoded = json_decode($res->getBody());
+            
+            // $response = $client->request('GET', $url);
+            $response = Http::get($this->apiBaseUrl . $url);
+
+            $decoded = json_decode($response->getBody());
 
             // artist_meta.summary
             if (isset($decoded->artist->bio) and isset($decoded->artist->bio->summary)) {

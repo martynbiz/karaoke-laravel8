@@ -52,6 +52,12 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
         ],
 
+        // a home for all the media files 
+        'media' => [
+            'driver' => 'local',
+            'root'   => storage_path('app/public/media'),
+        ],
+
     ],
 
     /*
@@ -66,7 +72,9 @@ return [
     */
 
     'links' => [
-        public_path('storage') => storage_path('app/public'),
+        // public_path('storage') => storage_path('app/public'),
+        // public_path('images') => storage_path('app/images'),
+        public_path('media') => storage_path('app/public/media'),
     ],
 
 ];
