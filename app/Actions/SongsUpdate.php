@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+// use Illuminate\Contracts\Filesystem\Filesystem;
 
 use App\Models\Song;
 use App\Models\Artist;
@@ -41,65 +42,31 @@ class SongsUpdate
     protected $tagModel;
 
     /**
-     * Http client 
-     *
-     * @var Illuminate\Support\Facades\Http
+     * @var string
      */
-    protected $http;
-
-    /**
-     * File storage client 
-     *
-     * @var Illuminate\Support\Facades\Storage
-     */
-    protected $storage;
-
-    // /**
-    //  * Settings
-    //  *
-    //  * @var array
-    //  */
-    // protected $config = [];
-
     protected $pathPattern;
 
+    /**
+     * @var string
+     */
     protected $apiBaseUrl;
 
+    /**
+     * @var string
+     */
     protected $apiKey;
-
-    /**
-     * Flag to indicate that the action is running
-     */
-    protected $isRunning = false;
-
-    /**
-     * This is where progress is currently at e.g. 0.5
-     */
-    protected $progress = 0;
-
-    /**
-     * How many total units to complete the current task eg. Add song paths to db 
-     */
-    protected $progressUnits = 0;
-
-    /**
-     * This is the current operation e.g. Fetching songs data from Real.fm database
-     */
-    protected $progressMessage = '';
 
     /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct(Song $songModel, Artist $artistModel, Language $languageModel, Tag $tagModel, Http $http, Storage $storage)
+    public function __construct(Song $songModel, Artist $artistModel, Language $languageModel, Tag $tagModel)
     {
         $this->songModel = $songModel;
         $this->artistModel = $artistModel;
         $this->languageModel = $languageModel;
         $this->tagModel = $tagModel;
-        $this->http = $http;
-        $this->storage = $storage;
 
         $this->pathPattern = '/^.*\/(.*)\/(.*)\/(.*)\..*?$/';
         $this->apiBaseUrl = 'http://ws.audioscrobbler.com/2.0/';
@@ -113,8 +80,8 @@ class SongsUpdate
     public function run()
     {
         $this->updateSongPaths();
-        // $this->fetchSongsMetaData();
-        // $this->fetchArtistsMetaData();
+        $this->fetchSongsMetaData();
+        $this->fetchArtistsMetaData();
     }
 
     /**
@@ -124,94 +91,74 @@ class SongsUpdate
 
         $mediaDir = base_path(env('MEDIA_DIR'));
 
-        // // Get paths as array
-        // $paths = $this->scanDir( $mediaDir );
-        // // $paths = array_slice($paths, 0, 1);// TODO testing
-        // foreach ($paths as $i => $path) {
-        //     // e.g. /var/www/karaoke/../Lang/Artist/Song.mp4 -> /Lang/Artist/Song.mp4
-        //     $paths[$i] = str_replace($mediaDir, '', $path);
-        // }
-
-        // $paths = $this->storage->allFiles(env('MEDIA_DIR'));
         $paths = Storage::allFiles(env('MEDIA_DIR'));
 
-        dd($paths);
-        
-        $this->isRunning = true;
-        $this->progressMessage = 'Adding song paths to database';
-        $this->progressUnits = count($paths);
-        $this->progress = 0;
+        // remove songs that are not in the latest scan
+        $this->songModel
+            ->whereNotIn('path', $paths)
+            ->delete();
 
-        // // remove songs that are not in the latest scan
-        // $this->songModel
-        //     ->whereNotIn('path', $paths)
-        //     ->delete();
+        // remove artists that no longer have any songs (as they may have just
+        // been deleted in the above)
+        $artists = $this->artistModel
+            ->with('songs')
+            ->get();
 
-        // // remove artists that no longer have any songs (as they may have just
-        // // been deleted in the above)
-        // $artists = $this->artistModel
-        //     ->with('songs')
-        //     ->get();
+        foreach ($artists as $artist) {
+            if (!count($artist->songs)) {
+                $artist->delete();
+            }
+        }
 
-        // foreach ($artists as $artist) {
-        //     if (!count($artist->songs)) {
-        //         $artist->delete();
-        //     }
-        // }
+        foreach ($paths as $i => $path) {
 
-        // foreach ($paths as $i => $path) {
+            // extract the artist/name from path
+            preg_match($this->pathPattern, $path, $matches);
 
-        //     // extract the artist/name from path
-        //     preg_match($this->$pathPattern, $path, $matches);
-
-        //     if ($matches) {
-        //         list($match, $languageName, $artistName, $songName) = $matches;
-        //         if ($artistName and $songName) {
+            if ($matches) {
+                list($match, $languageName, $artistName, $songName) = $matches;
+                if ($artistName and $songName) {
                     
-        //             // find or create artist
-        //             try {
+                    // find or create artist
+                    try {
 
-        //                 $artist = $this->artistModel
-        //                     ->where('name', $artistName)
-        //                     ->first();
-        //                 if (!$artist) {
-        //                     $artist = $this->artistModel->create([
-        //                         'name' => $artistName,
-        //                     ]);
-        //                 }
+                        $artist = $this->artistModel
+                            ->where('name', $artistName)
+                            ->first();
+                        if (!$artist) {
+                            $artist = $this->artistModel->create([
+                                'name' => $artistName,
+                            ]);
+                        }
 
-        //                 $language = $this->languageModel
-        //                     ->where('name', $languageName)
-        //                     ->first();
-        //                 if (!$language) {
-        //                     $language = $this->languageModel->create([
-        //                         'name' => $languageName,
-        //                     ]);
-        //                 }
+                        $language = $this->languageModel
+                            ->where('name', $languageName)
+                            ->first();
+                        if (!$language) {
+                            $language = $this->languageModel->create([
+                                'name' => $languageName,
+                            ]);
+                        }
 
-        //                 $song = $artist->songs()
-        //                     ->where('name', $songName) // TODO use path not name? (might have been edited)
-        //                     ->first();
-        //                 if (!$song) {
-        //                     $song = $artist->songs()->create([
-        //                         'name' => $songName,
-        //                         'language_id' => $language->id,
-        //                         'path' => $path,
-        //                     ]);
-        //                 }
+                        $song = $artist->songs()
+                            ->where('name', $songName) // TODO use path not name? (might have been edited)
+                            ->first();
+                        if (!$song) {
+                            $song = $artist->songs()->create([
+                                'name' => $songName,
+                                'language_id' => $language->id,
+                                'path' => $path,
+                            ]);
+                        }
 
-        //             } catch (Exception $e) {
+                    } catch (Exception $e) {
 
-        //                 $this->error('ERROR: ' . $e->getMessages());
+                        $this->error('ERROR: ' . $e->getMessages());
 
-        //             }
-        //         }
-        //     }
-
-        //     $this->progress++;
-        // }
-
-        // $this->isRunning = false;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -219,19 +166,9 @@ class SongsUpdate
      */
     protected function fetchSongsMetaData() {
 
-        // // get song information from api
-        // $client = new \GuzzleHttp\Client([
-        //     'base_uri' => 'http://ws.audioscrobbler.com/2.0/'
-        // ]);
-
         $songs = $this->songModel
             ->where('has_meta', 0)
             ->get();
-
-        $this->isRunning = true;
-        $this->progressMessage = 'Fetching song meta data';
-        $this->progressUnits = count($songs);
-        $this->progress = 0;
 
         foreach ($songs as $i => $song) {
 
@@ -239,7 +176,7 @@ class SongsUpdate
             $url = '?api_key='.$this->apiKey.'&format=json&method=track.getInfo&artist='.$song->artist->name.'&track='.$song->name;
             
             // $response = $client->request('GET', $url);
-            $response = $http->get($this->apiBaseUrl . $url);
+            $response = Http::get($this->apiBaseUrl . $url);
             
             $decoded = json_decode($response->getBody());
 
@@ -282,11 +219,7 @@ class SongsUpdate
             ]);
 
             sleep(1); // so we don't throttle the api
-
-            $this->progress++;
         }
-
-        $this->isRunning = false;
     }
 
     /**
@@ -294,19 +227,9 @@ class SongsUpdate
      */
     protected function fetchArtistsMetaData() {
 
-        // // get song information from api
-        // $client = new \GuzzleHttp\Client([
-        //     'base_uri' => 'http://ws.audioscrobbler.com/2.0/'
-        // ]);
-
         $artists = $this->artistModel
             ->where('has_meta', 0)
             ->get();
-
-        $this->isRunning = true;
-        $this->progressMessage = 'Fetching artist meta data';
-        $this->progressUnits = count($artists);
-        $this->progress = 0;
 
         foreach ($artists as $i => $artist) {
             $url = '?api_key='.$this->apiKey.'&format=json&method=artist.getInfo&artist='.$artist->name;
@@ -355,11 +278,7 @@ class SongsUpdate
             ]);
 
             sleep(1); // so we don't throttle the api
-
-            $this->progress++;
         }
-
-        $this->isRunning = false;
     }
 
     protected function scanDir($path, &$songs = []) {
