@@ -79,6 +79,11 @@ Route::middleware(['auth'])->group(function () {
 			Route::put('/', [Admin\SongsController::class, 'update'])->name('admin_songs_update');
 		});
 
+		// settigns
+		Route::prefix('settings')->group(function () {
+		    Route::get('/', [Admin\SettingsController::class, 'device'])->name('admin_settings_device');
+		});
+
 	});
 });
 

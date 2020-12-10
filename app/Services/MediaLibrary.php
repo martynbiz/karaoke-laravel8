@@ -1,17 +1,16 @@
 <?php
 
-namespace App\Actions;
+namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-// use Illuminate\Contracts\Filesystem\Filesystem;
 
 use App\Models\Song;
 use App\Models\Artist;
 use App\Models\Language;
 use App\Models\Tag;
 
-class SongsUpdate
+class MediaLibrary
 {
     /**
      * Song model
@@ -77,7 +76,7 @@ class SongsUpdate
      * Execute the console command.
      * @return mixed
      */
-    public function run()
+    public function syncFiles()
     {
         $this->updateSongPaths();
         $this->fetchSongsMetaData();
@@ -97,16 +96,19 @@ class SongsUpdate
         $this->songModel
             ->whereNotIn('path', $paths)
             ->delete();
-
+        // $songsService->removeSongsNotInPathsArray($paths);
+        
         // remove artists that no longer have any songs (as they may have just
         // been deleted in the above)
         $artists = $this->artistModel
             ->with('songs')
             ->get();
+        // $artists = $artistsService->getArtistsWithSongs()
 
         foreach ($artists as $artist) {
             if (!count($artist->songs)) {
                 $artist->delete();
+                // $artistsService->deleteArtistById($artist->id)
             }
         }
 
@@ -125,10 +127,12 @@ class SongsUpdate
                         $artist = $this->artistModel
                             ->where('name', $artistName)
                             ->first();
+                        // $artist = $artistsService->getArtistByName($artistName);
                         if (!$artist) {
                             $artist = $this->artistModel->create([
                                 'name' => $artistName,
                             ]);
+                            // $artistsService->createArtist(['name' => $artistName]);
                         }
 
                         $language = $this->languageModel
