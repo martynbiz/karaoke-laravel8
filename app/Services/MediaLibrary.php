@@ -88,9 +88,7 @@ class MediaLibrary
      */
     protected function updateSongPaths() {
 
-        $mediaDir = base_path(env('MEDIA_DIR'));
-
-        $paths = Storage::allFiles(env('MEDIA_DIR'));
+        $paths = Storage::allFiles(env('MEDIA_STORAGE_DIR'));
 
         // remove songs that are not in the latest scan
         $this->songModel
@@ -151,7 +149,7 @@ class MediaLibrary
                             $song = $artist->songs()->create([
                                 'name' => $songName,
                                 'language_id' => $language->id,
-                                'path' => $path,
+                                'path' => preg_replace('/^public/', '', $path),
                             ]);
                         }
 

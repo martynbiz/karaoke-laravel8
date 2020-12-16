@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\Controller;
 use App\Models\Song;
-use App\Actions\MediaLibrary;
+use App\Services\MediaLibrary;
 
 class SongsController extends Controller
 {

@@ -81,6 +81,13 @@ $ php artisan key:generate
 $ cp .env.example .env
 ```
 
+Edit realfm_key TODO error if not set 
+
+```
+$ mkdir storage/app/public/media
+$ php artisan storage:link
+```
+
 Vagrant is used to start the VM which is where we'll run the app from:
 
 ```

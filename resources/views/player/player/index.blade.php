@@ -48,7 +48,9 @@
 
                         currentSong = data.songs[0];
 
-                        var path = "/media" + currentSong.path;
+                        var path = currentSong.path;
+
+                        console.log('Playing: ', currentSong.path);
 
                         if (source) {
                             if (path !== source.getAttribute("src")) {
